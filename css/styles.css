@@ -222,8 +222,33 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 /* ===== Split ===== */
 .split { display: grid; gap: 40px; align-items: center; }
-.split__media { margin: 0; }
-.split__media img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 2px; }
+/* Фото целиком, в родных пропорциях, в рамке-паспарту: белое поле, тонкая линия внутри и смещённая рамка-контур */
+.split__media {
+  position: relative;
+  isolation: isolate;
+  justify-self: center;
+  margin: 12px 12px 0 0;
+  padding: 14px;
+  background: var(--surface);
+  box-shadow: 0 24px 48px -30px rgba(27, 26, 25, .45);
+}
+.split__media::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid #cdc4b8;
+  pointer-events: none;
+}
+.split__media::before {
+  content: "";
+  position: absolute;
+  inset: -12px -12px 12px 12px;
+  border: 1px solid var(--accent);
+  opacity: .45;
+  z-index: -1;
+}
+.split__media picture { display: block; }
+.split__media img { width: auto; max-width: 100%; max-height: min(78svh, 760px); margin: 0 auto; }
 @media (min-width: 900px) {
   .split { grid-template-columns: 1fr 1fr; gap: 72px; }
   .split--reverse .split__media { order: -1; }
