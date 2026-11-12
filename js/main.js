@@ -1,106 +1,99 @@
 (function () {
   'use strict';
 
-  var S = window.SITE;
-  if (!S) return;
-
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
 
-  function el(tag, attrs, children) {
-    var node = document.createElement(tag);
-    if (attrs) {
-      Object.keys(attrs).forEach(function (key) {
-        var val = attrs[key];
-        if (val == null || val === false) return;
-        if (key === 'text') node.textContent = val;
-        else if (key === 'html') node.innerHTML = val;
-        else if (key === 'className') node.className = val;
-        else node.setAttribute(key, val === true ? '' : val);
-      });
-    }
-    (children || []).forEach(function (child) { if (child) node.appendChild(child); });
-    return node;
-  }
+  /* ---------- Данные портфолио ----------
+     [файл, категория, высота при ширине 1400, описание, extra]
+     extra = кадр виден только во вкладке своей категории, во «Все» не попадает */
+  var CATEGORIES = [
+    { id: 'all', label: 'Все' },
+    { id: 'wedding', label: 'Свадьбы' },
+    { id: 'street', label: 'Прогулки' },
+    { id: 'studio', label: 'Студия' },
+    { id: 'events', label: 'Мероприятия' }
+  ];
+  var PHOTOS = [
+    ['st03', 'studio', 2488, 'Мама с малышом на светлом полу'],
+    ['wd02', 'wedding', 788, 'Молодожёны целуются среди лепестков на набережной'],
+    ['su03', 'street', 2488, 'Девушка с телефоном гуляет по зелёному парку'],
+    ['ev03', 'events', 788, 'Малыш делает первые шаги на празднике с шарами'],
+    ['st06', 'studio', 2100, 'Пара у кремового дивана, кадр через круглое зеркало'],
+    ['wd01', 'wedding', 2488, 'Невеста в пышном платье в зале с люстрой'],
+    ['st01', 'studio', 788, 'Пара в белых футболках сидит на полу в студии'],
+    ['sud01', 'street', 934, 'Мама с малышом на руках на закате'],
+    ['st05', 'studio', 788, 'Девушка с белыми пионами'],
+    ['wd03', 'wedding', 788, 'Жених и невеста у стены с зеленью'],
+    ['st04', 'studio', 2488, 'Малыш встаёт, держась за стул, на белом фоне'],
+    ['su04', 'street', 2100, 'Девушка у стеклянного ограждения на фоне синего неба'],
+    ['ev05', 'events', 2100, 'Юная гимнастка сидит на полу на занятии'],
+    ['st08', 'studio', 934, 'Силуэт мужчины на стуле на фоне светлого круга'],
+    ['wd04', 'wedding', 788, 'Молодожёны на террасе на фоне неба'],
+    ['ev02', 'events', 788, 'Две девочки открывают подарок с цветами'],
+    ['st02', 'studio', 2488, 'Девушка в чёрном пиджаке на сером фоне'],
+    ['wd05', 'wedding', 788, 'Жених и невеста с сиреневым букетом в светлом зале'],
+    ['sud05', 'street', 2100, 'Портрет пары в парке'],
 
-  // [ЗАПОЛНИТЬ] и [УТОЧНИТЬ] подсвечиваются, чтобы их было видно при правках
-  function withTodo(text) {
-    var safe = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-    return safe.replace(/\[(ЗАПОЛНИТЬ|УТОЧНИТЬ|СОГЛАСОВАТЬ С НИКОЙ)[^\]]*\]/g, '<span class="todo">$&</span>');
-  }
-
-  // Адаптивная картинка: <picture> с webp + jpg
-  function picture(photo, sizes, opts) {
-    opts = opts || {};
-    var base = 'img/p/' + photo.id;
-    var size = (window.PHOTO_SIZES || {})[photo.id] || [1400, 1400];
-    var srcset = function (ext) { return base + '-600.' + ext + ' 600w, ' + base + '-1400.' + ext + ' ' + size[0] + 'w'; };
-    var img = el('img', {
-      src: base + '-600.jpg',
-      srcset: srcset('jpg'),
-      sizes: sizes,
-      width: size[0],
-      height: size[1],
-      alt: photo.alt,
-      loading: opts.eager ? null : 'lazy',
-      decoding: 'async'
-    });
-    var pic = opts.target || el('picture');
-    pic.appendChild(el('source', { type: 'image/webp', srcset: srcset('webp'), sizes: sizes }));
-    pic.appendChild(img);
-    return pic;
-  }
-
-  /* ---------- Контакты ---------- */
-  $$('[data-contact]').forEach(function (a) {
-    var c = S.contacts[a.getAttribute('data-contact')];
-    if (!c) return;
-    a.href = c.url;
-    if (c.external) { a.target = '_blank'; a.rel = 'noopener'; }
+    ['wdd01', 'wedding', 2488, 'Невеста на лестнице с коваными перилами', 1],
+    ['wdd02', 'wedding', 788, 'Невеста в короне, рядом мама и подруга', 1],
+    ['wdd03', 'wedding', 788, 'Невеста ставит подпись, в руке букет роз', 1],
+    ['wdd04', 'wedding', 788, 'Улыбающаяся девушка с букетом у колоннады', 1],
+    ['wdd07', 'wedding', 2488, 'Жених стоит рядом с невестой, сидящей в кресле', 1],
+    ['su02', 'street', 2488, 'Мужчина пьёт кофе у окна в кафе', 1],
+    ['sud02', 'street', 934, 'Мама с малышом у зеркального павильона в парке', 1],
+    ['sud03', 'street', 934, 'Мама с малышом у стены с зеленью', 1],
+    ['sud04', 'street', 934, 'Пара гуляет у воды в парке', 1],
+    ['su01', 'street', 2488, 'Прохожий на городской улице, кадр сверху', 1],
+    ['st07', 'studio', 2100, 'Мужской профиль в тёмно-зелёных тонах', 1],
+    ['std01', 'studio', 2488, 'Девушка сидит на плечах у парня на сером фоне', 1],
+    ['std02', 'studio', 2488, 'Малыш в тёплой шапочке в детской студии', 1],
+    ['std04', 'studio', 788, 'Малыш лежит на подушке, вид сверху', 1],
+    ['std05', 'studio', 788, 'Мама держит малыша в голубом комбинезоне', 1],
+    ['std07', 'studio', 788, 'Девушка с белым пионом у лица', 1],
+    ['ev01', 'events', 788, 'Соревнования по борьбе в спортивном зале', 1],
+    ['evd03', 'events', 934, 'Казак в красной черкеске', 1],
+    ['evd04', 'events', 788, 'Выступающий с микрофоном на конференции', 1]
+  ].map(function (p) {
+    return { src: 'img/p/v3-' + p[0], cat: p[1], h: p[2], alt: p[3], extra: !!p[4] };
   });
-  $$('[data-contact-label="phone"]').forEach(function (n) { n.textContent = S.contacts.phone.label; });
-  $('#year').textContent = new Date().getFullYear();
+
+  function inTab(p, cat) { return cat === 'all' ? !p.extra : p.cat === cat; }
 
   /* ---------- Портфолио ---------- */
   var gallery = $('#gallery');
   var filters = $('#filters');
-  // Фото с extra:true («доп») видны только во вкладке своей категории, во «Все» не попадают
-  function inTab(p, cat) { return cat === 'all' ? !p.extra : p.cat === cat; }
-  var visiblePhotos = S.photos.filter(function (p) { return inTab(p, 'all'); });
+  var visiblePhotos = PHOTOS.filter(function (p) { return inTab(p, 'all'); });
+  var SIZES = '(min-width: 1280px) 290px, (min-width: 768px) 33vw, 50vw';
 
-  var categories = [{ id: 'all', label: 'Все' }].concat(S.categories.filter(function (c) {
-    return S.photos.some(function (p) { return p.cat === c.id; });
-  }));
+  filters.innerHTML = CATEGORIES.map(function (c, i) {
+    var count = PHOTOS.filter(function (p) { return inTab(p, c.id); }).length;
+    return '<button type="button" class="filter" data-cat="' + c.id + '" aria-pressed="' + (i === 0) + '">' +
+      c.label + '<span class="filter__count">' + count + '</span></button>';
+  }).join('');
 
-  categories.forEach(function (cat, i) {
-    var count = S.photos.filter(function (p) { return inTab(p, cat.id); }).length;
-    var btn = el('button', {
-      type: 'button',
-      className: 'filter',
-      role: 'tab',
-      'aria-selected': i === 0 ? 'true' : 'false',
-      'data-cat': cat.id
-    }, [document.createTextNode(cat.label), el('span', { className: 'filter__count', text: count })]);
-    filters.appendChild(btn);
-  });
+  gallery.innerHTML = PHOTOS.map(function (p, i) {
+    var set = function (ext) { return p.src + '-600.' + ext + ' 600w, ' + p.src + '-1400.' + ext + ' 1400w'; };
+    return '<li class="gallery__item"' + (p.extra ? ' hidden' : '') + '>' +
+      '<button type="button" class="gallery__btn" data-index="' + i + '" aria-label="Открыть фото: ' + p.alt + '">' +
+      '<picture><source type="image/webp" srcset="' + set('webp') + '" sizes="' + SIZES + '">' +
+      '<img src="' + p.src + '-600.jpg" srcset="' + set('jpg') + '" sizes="' + SIZES + '" width="1400" height="' + p.h +
+      '" alt="' + p.alt + '" loading="lazy" decoding="async"></picture></button></li>';
+  }).join('');
 
-  S.photos.forEach(function (photo, index) {
-    var btn = el('button', { type: 'button', className: 'gallery__btn', 'aria-label': 'Открыть фото: ' + photo.alt, 'data-index': index });
-    picture(photo, '(min-width: 1280px) 290px, (min-width: 768px) 33vw, 50vw', { target: btn });
-    var item = el('li', { className: 'gallery__item', 'data-cat': photo.cat }, [btn]);
-    item.hidden = !inTab(photo, 'all');
-    gallery.appendChild(item);
-  });
-
+  function setFilter(cat) {
+    $$('.filter', filters).forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-cat') === cat)); });
+    $$('.gallery__item', gallery).forEach(function (item, i) { item.hidden = !inTab(PHOTOS[i], cat); });
+    visiblePhotos = PHOTOS.filter(function (p) { return inTab(p, cat); });
+  }
   filters.addEventListener('click', function (e) {
     var btn = e.target.closest('.filter');
-    if (!btn) return;
-    var cat = btn.getAttribute('data-cat');
-    $$('.filter', filters).forEach(function (b) { b.setAttribute('aria-selected', b === btn ? 'true' : 'false'); });
-    $$('.gallery__item', gallery).forEach(function (item) {
-      item.hidden = !inTab(S.photos[+item.querySelector('.gallery__btn').getAttribute('data-index')], cat);
-    });
-    visiblePhotos = S.photos.filter(function (p) { return inTab(p, cat); });
+    if (btn) setFilter(btn.getAttribute('data-cat'));
+  });
+
+  // Карточка направления сразу включает нужную вкладку портфолио
+  $$('[data-filter]').forEach(function (a) {
+    a.addEventListener('click', function () { setFilter(a.getAttribute('data-filter')); });
   });
 
   /* ---------- Лайтбокс ---------- */
@@ -109,17 +102,15 @@
   var lbCaption = $('.lightbox__caption', lb);
   var current = 0;
   var lastFocus = null;
+  var ext = document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0 ? '.webp' : '.jpg';
 
   function showPhoto(i) {
     current = (i + visiblePhotos.length) % visiblePhotos.length;
     var p = visiblePhotos[current];
-    var base = 'img/p/' + p.id + '-1400';
-    var supportsWebp = document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0;
-    lbImg.src = base + (supportsWebp ? '.webp' : '.jpg');
+    lbImg.src = p.src + '-1400' + ext;
     lbImg.alt = p.alt;
     lbCaption.textContent = (current + 1) + ' / ' + visiblePhotos.length;
   }
-
   function openLightbox(photo) {
     lastFocus = document.activeElement;
     showPhoto(visiblePhotos.indexOf(photo));
@@ -128,7 +119,6 @@
     requestAnimationFrame(function () { lb.classList.add('is-open'); });
     $('.lightbox__close', lb).focus();
   }
-
   function closeLightbox() {
     lb.classList.remove('is-open');
     document.body.classList.remove('is-locked');
@@ -138,7 +128,7 @@
 
   gallery.addEventListener('click', function (e) {
     var btn = e.target.closest('.gallery__btn');
-    if (btn) openLightbox(S.photos[+btn.getAttribute('data-index')]);
+    if (btn) openLightbox(PHOTOS[+btn.getAttribute('data-index')]);
   });
   $('.lightbox__close', lb).addEventListener('click', closeLightbox);
   $('.lightbox__nav--prev', lb).addEventListener('click', function () { showPhoto(current - 1); });
@@ -171,161 +161,17 @@
     touchX = null;
   });
 
-  /* ---------- «Вы точно получитесь красивой» ---------- */
-  var careList = $('#care-list');
-  S.care.forEach(function (item) {
-    careList.appendChild(el('li', null, [el('h3', { text: item.title }), el('p', { html: withTodo(item.text) })]));
-  });
-  picture(S.photoFor.beautiful, '(min-width: 900px) 560px, 100vw', { target: $('#beautiful-photo') });
-
-  var careQuotes = $('#care-quotes');
-  S.careQuotes.forEach(function (q) {
-    careQuotes.appendChild(el('li', null, [el('figure', { className: 'quote' }, [
-      el('blockquote', { text: '«' + q.text + '»' }),
-      el('figcaption', { text: q.name + ', ' + q.date })
-    ])]));
-  });
-
-  /* ---------- Услуги ---------- */
-  var services = $('#services');
-  S.services.forEach(function (s) {
-    var list = el('ul', { className: 'service__list' });
-    s.includes.forEach(function (line) { list.appendChild(el('li', { html: withTodo(line) })); });
-    services.appendChild(el('li', { className: 'service' + (s.main ? ' service--main' : '') }, [
-      s.main ? el('span', { className: 'service__badge', text: 'Основное направление' }) : null,
-      el('h3', { text: s.title }),
-      el('p', { className: 'service__price', html: withTodo(s.price) }),
-      el('p', { className: 'service__desc', text: s.desc }),
-      list,
-      el('a', { className: 'btn' + (s.main ? '' : ' btn--ghost'), href: '#booking', 'data-type': s.title, text: 'Записаться' })
-    ]));
-  });
-  services.addEventListener('click', function (e) {
-    var a = e.target.closest('[data-type]');
-    if (a) $('#f-type').value = a.getAttribute('data-type');
-  });
-
-  /* ---------- Обо мне ---------- */
-  picture(S.photoFor.about, '(min-width: 900px) 560px, 100vw', { target: $('#about-photo') });
-  var aboutText = $('#about-text');
-  S.about.paragraphs.forEach(function (p) { aboutText.appendChild(el('p', { html: withTodo(p) })); });
-  var aboutFacts = $('#about-facts');
-  S.about.facts.forEach(function (f) {
-    aboutFacts.appendChild(el('li', null, [el('strong', { text: f.value }), el('span', { text: f.label })]));
-  });
-
-  /* ---------- Шаги ---------- */
-  var steps = $('#steps');
-  S.steps.forEach(function (s, i) {
-    steps.appendChild(el('li', { className: 'step' }, [
-      el('span', { className: 'step__num', text: String(i + 1).padStart(2, '0') }),
-      el('h3', { text: s.title }),
-      el('p', { html: withTodo(s.text) })
-    ]));
-  });
-
-  /* ---------- Отзывы ---------- */
+  /* ---------- Отзывы: часть скрыта стилями, кнопка раскрывает все ---------- */
   var reviewsList = $('#reviews-list');
-  var REVIEWS_SHOWN = 6;
-  $('#reviews-source').innerHTML = withTodo(S.reviewsSource);
-  S.reviews.forEach(function (r, i) {
-    reviewsList.appendChild(el('li', { className: 'review', hidden: i >= REVIEWS_SHOWN }, [
-      el('p', { className: 'review__stars', 'aria-label': 'Оценка 5 из 5', text: '★★★★★' }),
-      el('p', { className: 'review__text', text: r.text }),
-      el('p', { className: 'review__meta' }, [el('span', { className: 'review__name', text: r.name }), el('span', { text: r.date })])
-    ]));
-  });
   var moreBtn = $('#reviews-more');
-  if (S.reviews.length <= REVIEWS_SHOWN) moreBtn.remove();
-  else moreBtn.addEventListener('click', function () {
-    $$('.review', reviewsList).forEach(function (r) { r.hidden = false; });
+  reviewsList.classList.add('is-collapsed');
+  moreBtn.hidden = false;
+  moreBtn.addEventListener('click', function () {
+    reviewsList.classList.remove('is-collapsed');
     moreBtn.remove();
   });
 
-  /* ---------- FAQ ---------- */
-  var faq = $('#faq-list');
-  S.faq.forEach(function (f) {
-    faq.appendChild(el('details', null, [el('summary', { text: f.q }), el('div', { className: 'faq__answer', html: withTodo(f.a) })]));
-  });
-
-  /* ---------- Форма ---------- */
-  var form = $('#booking-form');
-  var typeSelect = $('#f-type');
-  typeSelect.appendChild(el('option', { value: '', text: 'Выберите' }));
-  S.shootTypes.forEach(function (t) { typeSelect.appendChild(el('option', { value: t, text: t })); });
-  var dateInput = $('#f-date');
-  dateInput.min = new Date().toISOString().slice(0, 10);
-
-  var validators = {
-    name: function (v) { return v.trim().length >= 2 ? '' : 'Напишите, как к вам обращаться'; },
-    contact: function (v) {
-      v = v.trim();
-      if (!v) return 'Оставьте телефон или ник в Telegram, чтобы я могла ответить';
-      var digits = v.replace(/\D/g, '');
-      var isPhone = /^[+\d\s()-]+$/.test(v) && digits.length >= 10 && digits.length <= 12;
-      var isTg = /^@?[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(v);
-      return isPhone || isTg ? '' : 'Проверьте номер (например, +7 900 000-00-00) или ник (@username)';
-    },
-    date: function (v) { return !v || v >= dateInput.min ? '' : 'Дата уже прошла — выберите будущую'; },
-    type: function (v) { return v ? '' : 'Выберите тип съёмки'; }
-  };
-
-  function validateField(name) {
-    var input = form.elements[name];
-    var msg = validators[name](input.value);
-    var field = input.closest('.field');
-    field.classList.toggle('is-invalid', !!msg);
-    input.setAttribute('aria-invalid', msg ? 'true' : 'false');
-    $('#f-' + name + '-err').textContent = msg;
-    return !msg;
-  }
-
-  Object.keys(validators).forEach(function (name) {
-    var input = form.elements[name];
-    input.addEventListener('blur', function () { if (input.value) validateField(name); });
-    input.addEventListener('input', function () { if (input.closest('.field').classList.contains('is-invalid')) validateField(name); });
-  });
-
-  function formatDate(iso) {
-    if (!iso) return 'пока не выбрана';
-    var p = iso.split('-');
-    return p[2] + '.' + p[1] + '.' + p[0];
-  }
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var status = $('#form-status');
-    status.className = 'form__status';
-    var invalid = Object.keys(validators).filter(function (n) { return !validateField(n); });
-    if (invalid.length) {
-      form.elements[invalid[0]].focus();
-      status.textContent = 'Проверьте отмеченные поля.';
-      return;
-    }
-    var f = form.elements;
-    var text = [
-      'Здравствуйте, Ника! Хочу записаться на съёмку.',
-      'Имя: ' + f.name.value.trim(),
-      'Контакт: ' + f.contact.value.trim(),
-      'Тип съёмки: ' + f.type.value,
-      'Дата: ' + formatDate(f.date.value),
-      f.comment.value.trim() ? 'Комментарий: ' + f.comment.value.trim() : ''
-    ].filter(Boolean).join('\n');
-
-    var done = function (copied) {
-      status.classList.add('is-success');
-      status.textContent = copied
-        ? 'Текст заявки скопирован. Вставьте его в чат Telegram и отправьте.'
-        : 'Скопируйте текст заявки и отправьте его в чат Telegram:\n\n' + text;
-    };
-    // Открываем сразу, пока действует клик пользователя — иначе браузер заблокирует окно
-    window.open(S.contacts.telegram.url, '_blank', 'noopener');
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
-    } else {
-      done(false);
-    }
-  });
+  $('#year').textContent = new Date().getFullYear();
 
   /* ---------- Шапка и мобильная панель ---------- */
   var header = $('.header');
@@ -335,22 +181,23 @@
   function onScroll() {
     var y = window.scrollY;
     header.classList.toggle('is-scrolled', y > 8);
-    var pastHero = y > hero.offsetHeight * 0.6;
-    var bookingTop = booking.getBoundingClientRect().top;
-    var atBooking = bookingTop < window.innerHeight && booking.getBoundingClientRect().bottom > 0;
-    bar.classList.toggle('is-visible', pastHero && !atBooking);
+    var r = booking.getBoundingClientRect();
+    var atBooking = r.top < window.innerHeight && r.bottom > 0;
+    bar.classList.toggle('is-visible', y > hero.offsetHeight * 0.6 && !atBooking);
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
   /* ---------- Мягкое появление ---------- */
   if ('IntersectionObserver' in window) {
-    var targets = $$('.section__head, .split__text, .split__media, .service, .step, .quote, .booking > *');
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) { entry.target.classList.add('is-in'); io.unobserve(entry.target); }
       });
     }, { rootMargin: '0px 0px -8% 0px' });
-    targets.forEach(function (t) { t.classList.add('reveal'); io.observe(t); });
+    $$('.section__head, .split__text, .split__media, .service, .quote, .booking > *').forEach(function (t) {
+      t.classList.add('reveal');
+      io.observe(t);
+    });
   }
 })();
