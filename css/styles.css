@@ -221,6 +221,22 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .direction picture { position: absolute; inset: 0; }
 .direction img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease); }
 .direction:hover img { transform: scale(1.04); }
+/* контрастная рамка: тёмно-коричневая снаружи + тонкая светлая линия внутри */
+.direction { border: 3px solid var(--ink); transition: border-color .3s var(--ease); }
+.direction::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  z-index: 1;
+  border: 1px solid rgba(253, 251, 247, .85);
+  border-radius: 2px;
+  pointer-events: none;
+  transition: inset .3s var(--ease), border-color .3s var(--ease);
+}
+.direction:hover, .direction:focus-visible { border-color: var(--accent); }
+.direction:hover::after { inset: 8px; border-color: #fff; }
+.direction:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.direction__body, .direction__play { z-index: 2; }
 .direction__body {
   position: absolute;
   left: 0; right: 0; bottom: 0;
