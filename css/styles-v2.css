@@ -14,6 +14,8 @@
   --dark-soft: #c2d5aa;
   --frame: #d8c8b4;
   --header-bg: rgba(237, 229, 216, .92);
+  --service-tint: #e6efdb;
+  --service-tint-line: #cfdcbf;
 }
 [data-variant="general"] {
   --bg: #f5f1ea;
@@ -28,6 +30,8 @@
   --dark-soft: #d7c9b8;
   --frame: #d7c9b8;
   --header-bg: rgba(245, 241, 234, .92);
+  --service-tint: #e6efdb;
+  --service-tint-line: #cfdcbf;
 }
 
 .header { background: var(--header-bg); }
@@ -57,8 +61,8 @@
   width: 100%;
   margin: 0 auto;
 }
-.triptych picture { display: block; }
-.triptych img { width: 100%; height: auto; }
+.triptych picture { display: block; aspect-ratio: 2 / 3; overflow: hidden; }
+.triptych img { width: 100%; height: 100%; object-fit: cover; }
 
 /* На телефоне три фото в ряд слишком мелкие: центральное по середине, соседние видны по краям, листается пальцем */
 @media (max-width: 479px) {
@@ -74,7 +78,7 @@
 }
 /* Триптих целиком помещается в высоту экрана под шапкой */
 @media (min-width: 768px) {
-  .triptych { width: min(100%, calc((100svh - var(--header-h)) * 1.77), 1920px); }
+  .triptych { width: min(100%, calc((100svh - var(--header-h)) * 2), 1920px); }
 }
 
 .hero-v2__text {
@@ -128,7 +132,13 @@
 }
 [data-variant="wedding"] .directions { --dir-cols: 3; }
 [data-variant="general"] .directions { --dir-cols: 2; }
-@media (min-width: 1024px) { [data-variant="general"] .directions { --dir-cols: 4; } }
+/* Пять направлений: 3 + 2 на планшете, пять в ряд на широком экране */
+@media (min-width: 640px) and (max-width: 1023px) {
+  [data-variant="general"] .directions { grid-template-columns: repeat(6, 1fr); }
+  [data-variant="general"] .directions > li { grid-column: span 2; }
+  [data-variant="general"] .directions > li:nth-child(n+4) { grid-column: span 3; }
+}
+@media (min-width: 1024px) { [data-variant="general"] .directions { --dir-cols: 5; } }
 
 /* ===== Обо мне: один факт ===== */
 .about__facts { grid-template-columns: 1fr; }
@@ -157,21 +167,21 @@
 
 /* ===== Цены: общий вариант ===== */
 [data-variant="general"] .service__badge { display: none; }
-[data-variant="general"] .service--main { border-color: var(--line); }
+/* Фото-направления на светлом пастельно-зелёном, видео на белом */
+[data-variant="general"] .service--main { background: var(--service-tint); border-color: var(--service-tint-line); }
+[data-variant="general"] .service:last-child { background: var(--surface); border-color: var(--line); }
 @media (min-width: 640px) {
   [data-variant="general"] .service:last-child { grid-column: 1 / -1; }
 }
-@media (min-width: 640px) and (max-width: 899px) {
-  [data-variant="general"] .service:first-child { grid-column: 1 / -1; }
+@media (min-width: 1100px) {
+  [data-variant="general"] .services { grid-template-columns: repeat(4, 1fr); }
 }
 @media (min-width: 900px) {
-  [data-variant="general"] .services { grid-template-columns: repeat(3, 1fr); }
   [data-variant="general"] .service:last-child {
     display: grid;
     grid-template-columns: 1fr 1fr auto;
     column-gap: 40px;
     align-items: center;
-    background: transparent;
   }
   [data-variant="general"] .service:last-child > * { grid-column: 1; }
   [data-variant="general"] .service:last-child .service__list { grid-column: 2; grid-row: 1 / span 3; margin: 0; }

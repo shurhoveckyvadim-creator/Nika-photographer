@@ -64,14 +64,16 @@
   /* ---------- Портфолио ---------- */
   var gallery = $('#gallery');
   var filters = $('#filters');
-  var visiblePhotos = S.photos.slice();
+  // Фото с extra:true («доп») видны только во вкладке своей категории, во «Все» не попадают
+  function inTab(p, cat) { return cat === 'all' ? !p.extra : p.cat === cat; }
+  var visiblePhotos = S.photos.filter(function (p) { return inTab(p, 'all'); });
 
   var categories = [{ id: 'all', label: 'Все' }].concat(S.categories.filter(function (c) {
     return S.photos.some(function (p) { return p.cat === c.id; });
   }));
 
   categories.forEach(function (cat, i) {
-    var count = cat.id === 'all' ? S.photos.length : S.photos.filter(function (p) { return p.cat === cat.id; }).length;
+    var count = S.photos.filter(function (p) { return inTab(p, cat.id); }).length;
     var btn = el('button', {
       type: 'button',
       className: 'filter',
@@ -85,7 +87,9 @@
   S.photos.forEach(function (photo, index) {
     var btn = el('button', { type: 'button', className: 'gallery__btn', 'aria-label': 'Открыть фото: ' + photo.alt, 'data-index': index });
     picture(photo, '(min-width: 1280px) 290px, (min-width: 768px) 33vw, 50vw', { target: btn });
-    gallery.appendChild(el('li', { className: 'gallery__item', 'data-cat': photo.cat }, [btn]));
+    var item = el('li', { className: 'gallery__item', 'data-cat': photo.cat }, [btn]);
+    item.hidden = !inTab(photo, 'all');
+    gallery.appendChild(item);
   });
 
   filters.addEventListener('click', function (e) {
@@ -94,9 +98,9 @@
     var cat = btn.getAttribute('data-cat');
     $$('.filter', filters).forEach(function (b) { b.setAttribute('aria-selected', b === btn ? 'true' : 'false'); });
     $$('.gallery__item', gallery).forEach(function (item) {
-      item.hidden = cat !== 'all' && item.getAttribute('data-cat') !== cat;
+      item.hidden = !inTab(S.photos[+item.querySelector('.gallery__btn').getAttribute('data-index')], cat);
     });
-    visiblePhotos = S.photos.filter(function (p) { return cat === 'all' || p.cat === cat; });
+    visiblePhotos = S.photos.filter(function (p) { return inTab(p, cat); });
   });
 
   /* ---------- Лайтбокс ---------- */
