@@ -1,0 +1,85 @@
+/* Версия 3: герой на весь экран без триптиха + макет, приближенный к референсу (data-layout="ref").
+   Подключается после styles-v2.css */
+
+/* ===== Hero: одно большое фото, текст слева на светлой дымке ===== */
+.hero--ref {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: min(88svh, 820px);
+  overflow: hidden;
+  background: var(--bg);
+}
+.hero--ref + .section { padding-top: 72px; }
+.hero--ref::after { display: none; }
+.hero-ref__media, .hero-ref__media img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero-ref__media img { object-fit: cover; object-position: 72% 30%; }
+.hero--ref::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(0deg, color-mix(in srgb, var(--bg) 96%, transparent) 0%, color-mix(in srgb, var(--bg) 82%, transparent) 42%, transparent 78%);
+}
+.hero-ref__content { position: relative; z-index: 2; padding-top: 140px; padding-bottom: 40px; }
+.hero--ref .hero__title { max-width: 13ch; font-size: clamp(2.6rem, 1.6rem + 4vw, 5rem); }
+.hero--ref .hero__lead { max-width: 30rem; color: var(--ink); }
+.hero--ref .hero__facts { border-top-color: color-mix(in srgb, var(--ink) 25%, transparent); color: var(--ink); }
+@media (min-width: 900px) {
+  .hero--ref { align-items: center; min-height: min(calc(100svh - var(--header-h)), 860px); }
+  .hero--ref::before {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--bg) 96%, transparent) 0%, color-mix(in srgb, var(--bg) 85%, transparent) 36%, transparent 68%);
+  }
+  .hero-ref__content { padding-top: 56px; padding-bottom: 56px; }
+}
+
+/* ===== Полоса преимуществ под героем ===== */
+.strip { background: var(--surface); border-bottom: 1px solid var(--line); }
+.strip__list { display: grid; grid-template-columns: repeat(2, 1fr); }
+.strip__item { display: flex; align-items: flex-start; gap: 14px; padding: 22px 14px; }
+.strip__item svg { flex: none; width: 30px; height: 30px; color: var(--accent); }
+.strip__item strong { display: block; font-size: .92rem; font-weight: 600; }
+.strip__item span { display: block; margin-top: 2px; font-size: .82rem; color: var(--ink-soft); line-height: 1.4; }
+@media (min-width: 900px) {
+  .strip__list { grid-template-columns: repeat(4, 1fr); }
+  .strip__item { padding: 28px 24px; border-left: 1px solid var(--line); }
+  .strip__item:first-child { border-left: 0; padding-left: 0; }
+}
+
+/* ===== Направления как карточки на фото, подписи поверх ===== */
+.section__head--row { max-width: none; display: grid; gap: 20px; align-items: end; }
+.section__head--row .section__lead { margin-top: 12px; }
+@media (min-width: 900px) {
+  .section__head--row { grid-template-columns: 1fr auto; gap: 48px; }
+}
+[data-layout="ref"] .direction {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  background: var(--dark);
+}
+[data-layout="ref"] .direction picture { position: absolute; inset: 0; }
+[data-layout="ref"] .direction img { height: 100%; aspect-ratio: auto; }
+[data-layout="ref"] .direction__body {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 56px 16px 16px;
+  background: linear-gradient(0deg, rgba(28, 20, 16, .78) 0%, rgba(28, 20, 16, .35) 55%, transparent 100%);
+  color: #fff;
+}
+[data-layout="ref"] .direction__title { font-size: 1.35rem; }
+[data-layout="ref"] .direction__price { color: rgba(255, 255, 255, .86); font-size: .85rem; }
+@media (max-width: 639px) {
+  [data-layout="ref"] .directions > li:last-child { grid-column: 1 / -1; }
+  [data-layout="ref"] .directions > li:last-child .direction { aspect-ratio: 16 / 10; }
+}
+@media (min-width: 640px) {
+  [data-layout="ref"] .direction { aspect-ratio: 3 / 4; }
+  [data-layout="ref"] .direction__body { padding: 64px 18px 18px; }
+}
+
+/* ===== Обо мне на тёмном фоне ===== */
+[data-layout="ref"] #about .about__text,
+[data-layout="ref"] #about .about__facts span { color: var(--dark-soft); }
+[data-layout="ref"] #about .about__facts { border-top-color: rgba(255, 255, 255, .18); }
+.about__cta { margin-top: 28px; }

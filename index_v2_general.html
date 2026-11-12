@@ -17,6 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=3">
   <link rel="stylesheet" href="css/styles-v2.css?v=4">
+  <link rel="stylesheet" href="css/styles-v3.css?v=1">
 </head>
 <body>
   <a class="skip-link" href="#main">Перейти к содержанию</a>
@@ -45,27 +46,24 @@
 
   <main id="main">
     <!-- 1. Hero -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="container hero-v2">
-        <div class="hero-v2__text">
-          <p class="eyebrow">Ника Шолкова · кинооператор и фотограф</p>
-          <h1 id="hero-title" class="hero__title">Фотограф и видеограф в&nbsp;Краснодаре</h1>
-          <p class="hero__lead">Свадьбы, мероприятия, прогулки, студийные портреты и видео. Подскажу позы и создам спокойную атмосферу.</p>
-          <div class="hero__actions">
-            <a class="btn" href="#booking">Записаться на съёмку</a>
-            <a class="btn btn--ghost-light" href="#portfolio">Смотреть портфолио</a>
-          </div>
+    <section class="hero hero--ref" aria-labelledby="hero-title">
+      <picture class="hero-ref__media">
+        <source type="image/webp" srcset="img/p/v3-hero-1200.webp 1200w, img/p/v3-hero-2400.webp 2400w" sizes="100vw">
+        <img src="img/p/v3-hero-2400.jpg" srcset="img/p/v3-hero-1200.jpg 1200w, img/p/v3-hero-2400.jpg 2400w" sizes="100vw" width="2400" height="1351" alt="Невеста в жемчужных бусах у окна" fetchpriority="high">
+      </picture>
+      <div class="container hero-ref__content">
+        <p class="eyebrow">Ника Шолкова · кинооператор и фотограф</p>
+        <h1 id="hero-title" class="hero__title">Фотограф и видеограф в&nbsp;Краснодаре</h1>
+        <p class="hero__lead">Свадьбы, мероприятия, прогулки, студийные портреты и видео. Подскажу позы и создам спокойную атмосферу.</p>
+        <div class="hero__actions">
+          <a class="btn" href="#booking">Записаться на съёмку</a>
+          <a class="btn btn--ghost-light" href="#portfolio">Смотреть портфолио</a>
+        </div>
           <ul class="hero__facts">
             <li>4 года съёмок</li>
             <li>Фото и видео</li>
             <li>Съёмка от 3 000 ₽</li>
           </ul>
-        </div>
-        <div class="triptych">
-          <picture><source type="image/webp" srcset="img/p/v3-start1-600.webp 600w, img/p/v3-start1-1400.webp 1400w" sizes="(min-width: 768px) 33vw, 72vw"><img src="img/p/v3-start1-1400.jpg" width="1400" height="788" alt="Невеста в жемчужных бусах у окна" style="object-position: 68% 50%"></picture>
-          <picture class="triptych__center"><source type="image/webp" srcset="img/p/v3-start2-600.webp 600w, img/p/v3-start2-1400.webp 1400w" sizes="(min-width: 768px) 33vw, 72vw"><img src="img/p/v3-start2-1400.jpg" width="1400" height="2100" alt="Мужской портрет с розой на оранжевом фоне" fetchpriority="high"></picture>
-          <picture><source type="image/webp" srcset="img/p/v3-start3-600.webp 600w, img/p/v3-start3-1400.webp 1400w" sizes="(min-width: 768px) 33vw, 72vw"><img src="img/p/v3-start3-1400.jpg" width="1400" height="2100" alt="Пара отдыхает у кресла в светлом интерьере"></picture>
-        </div>
       </div>
     </section>
 
