@@ -72,20 +72,105 @@
       c.label + '<span class="filter__count">' + count + '</span></button>';
   }).join('');
 
-  gallery.innerHTML = PHOTOS.map(function (p, i) {
+  // Каждый кадр — готовый <li>; раскладка по колонкам делается в layoutGallery()
+  var items = PHOTOS.map(function (p, i) {
     var set = function (ext) { return p.src + '-600.' + ext + ' 600w, ' + p.src + '-1400.' + ext + ' 1400w'; };
-    return '<li class="gallery__item"' + (p.extra ? ' hidden' : '') + '>' +
-      '<button type="button" class="gallery__btn" data-index="' + i + '" aria-label="Открыть фото: ' + p.alt + '">' +
+    var li = document.createElement('li');
+    li.className = 'gallery__item';
+    li.innerHTML = '<button type="button" class="gallery__btn" data-index="' + i + '" aria-label="Открыть фото: ' + p.alt + '">' +
       '<picture><source type="image/webp" srcset="' + set('webp') + '" sizes="' + SIZES + '">' +
       '<img src="' + p.src + '-600.jpg" srcset="' + set('jpg') + '" sizes="' + SIZES + '" width="1400" height="' + p.h +
-      '" alt="' + p.alt + '" loading="lazy" decoding="async"></picture></button></li>';
-  }).join('');
+      '" alt="' + p.alt + '" loading="lazy" decoding="async"></picture></button>';
+    return li;
+  });
+  var currentCat = 'all';
+  var MAX_CROP = 1.3; // во сколько раз кадр может стать выше/ниже своих пропорций
+
+  function columnCount() {
+    if (window.matchMedia('(min-width: 1280px)').matches) return 4;
+    if (window.matchMedia('(min-width: 768px)').matches) return 3;
+    return 2;
+  }
+
+  /* Раскладка кадров по n колонкам с почти равной высотой:
+     кадр уходит в самую короткую колонку, затем кадры переносятся/меняются
+     между самой высокой и самой низкой колонкой, пока разница уменьшается */
+  function planColumns(idx, n, colW, gap) {
+    var hOf = function (i) { return colW * PHOTOS[i].h / 1400; };
+    var cols = [];
+    for (var c = 0; c < n; c++) cols.push({ list: [], h: -gap });
+    var pick = function (cmp) { return cols.reduce(function (a, b) { return cmp(b.h, a.h) ? b : a; }); };
+    idx.forEach(function (i) { var col = pick(function (x, y) { return x < y; }); col.list.push(i); col.h += hOf(i) + gap; });
+    for (var it = 0; it < 60; it++) {
+      var hi = pick(function (x, y) { return x > y; }), lo = pick(function (x, y) { return x < y; });
+      var spread = hi.h - lo.h, best = null;
+      hi.list.forEach(function (a, ai) {
+        if (hi.list.length > 1) {
+          var d = hOf(a) + gap, s = Math.abs(hi.h - lo.h - 2 * d);
+          if (s < spread - 1 && (!best || s < best.s)) best = { s: s, ai: ai, bi: -1 };
+        }
+        lo.list.forEach(function (b, bi) {
+          var s = Math.abs(hi.h - lo.h - 2 * (hOf(a) - hOf(b)));
+          if (s < spread - 1 && (!best || s < best.s)) best = { s: s, ai: ai, bi: bi };
+        });
+      });
+      if (!best) break;
+      var a = hi.list[best.ai];
+      if (best.bi < 0) { hi.list.splice(best.ai, 1); lo.list.push(a); hi.h -= hOf(a) + gap; lo.h += hOf(a) + gap; }
+      else { var b = lo.list[best.bi], d = hOf(a) - hOf(b); hi.list[best.ai] = b; lo.list[best.bi] = a; hi.h -= d; lo.h += d; }
+    }
+    // Остаток разницы делим поровну: высокие колонки чуть ниже, низкие чуть выше
+    var hs = cols.map(function (col) { return col.h; });
+    var target = Math.sqrt(Math.max.apply(null, hs) * Math.min.apply(null, hs));
+    var worst = 1;
+    cols.forEach(function (col) {
+      col.list.sort(function (x, y) { return x - y; });
+      var gaps = gap * (col.list.length - 1);
+      col.k = col.list.length ? (target - gaps) / (col.h - gaps) : 1;
+      worst = Math.max(worst, col.k, 1 / col.k);
+    });
+    return { cols: cols, worst: worst };
+  }
+
+  /* Masonry без пустот: низ всех колонок совпадает (кадры подрезаются через object-fit: cover).
+     Если во вкладке мало кадров и ровно не выходит — колонок становится меньше */
+  function layoutGallery() {
+    var gap = parseFloat(getComputedStyle(gallery).getPropertyValue('--gap')) || 8;
+    var idx = PHOTOS.map(function (p, i) { return i; }).filter(function (i) { return inTab(PHOTOS[i], currentCat); });
+    var plan = null;
+    for (var n = columnCount(); n >= 2; n--) {
+      var next = planColumns(idx, n, (gallery.clientWidth - gap * (n - 1)) / n, gap);
+      if (!plan || next.worst < plan.worst) plan = next;
+      if (next.worst <= MAX_CROP) break;
+    }
+    gallery.innerHTML = '';
+    plan.cols.forEach(function (col) {
+      var ul = document.createElement('ul');
+      ul.className = 'gallery__col';
+      col.list.forEach(function (i) {
+        items[i].firstChild.style.aspectRatio = '1400 / ' + (PHOTOS[i].h * col.k).toFixed(1);
+        ul.appendChild(items[i]);
+      });
+      gallery.appendChild(ul);
+    });
+  }
 
   function setFilter(cat) {
     $$('.filter', filters).forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-cat') === cat)); });
-    $$('.gallery__item', gallery).forEach(function (item, i) { item.hidden = !inTab(PHOTOS[i], cat); });
+    currentCat = cat;
     visiblePhotos = PHOTOS.filter(function (p) { return inTab(p, cat); });
+    layoutGallery();
   }
+  layoutGallery();
+
+  var lastW = gallery.clientWidth, resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (gallery.clientWidth !== lastW) { lastW = gallery.clientWidth; layoutGallery(); }
+    }, 120);
+  });
+
   filters.addEventListener('click', function (e) {
     var btn = e.target.closest('.filter');
     if (btn) setFilter(btn.getAttribute('data-cat'));
